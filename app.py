@@ -1,5 +1,5 @@
 import streamlit as st
-from openai import OpenAI
+import openai
 import os
 from dotenv import load_dotenv
 
@@ -12,52 +12,8 @@ if not api_key:
     st.error("API key not found. Please set the OPENAI_API_KEY environment variable in your .env file.")
     st.stop()
 
-# OpenAI 클라이언트 생성
-try:
-    client = OpenAI(api_key=api_key)
-except Exception as e:
-    st.error(f"Failed to initialize OpenAI client: {e}")
-    st.stop()
-
-# 어시스턴트 ID
-assistant_id = "asst_kSpI6lSV52HpMJczFXXPuGyT"
-
-# 세션 상태에 스레드 ID 저장
-if "thread_id" not in st.session_state:
-    try:
-        thread = client.beta.threads.create()
-        st.session_state.thread_id = thread.id
-    except Exception as e:
-        st.error(f"Failed to create thread: {e}")
-        st.stop()
-
-def chat_with_assistant(user_input):
-    try:
-        # 사용자 메시지를 스레드에 추가
-        client.beta.threads.messages.create(
-            thread_id=st.session_state.thread_id,
-            role="user",
-            content=user_input
-        )
-
-        # 어시스턴트에게 실행 요청
-        run = client.beta.threads.runs.create(
-            thread_id=st.session_state.thread_id,
-            assistant_id=assistant_id
-        )
-
-        # 실행 완료 대기
-        while run.status != "completed":
-            run = client.beta.threads.runs.retrieve(thread_id=st.session_state.thread_id, run_id=run.id)
-
-        # 어시스턴트의 응답 가져오기
-        messages = client.beta.threads.messages.list(thread_id=st.session_state.thread_id)
-        assistant_response = messages.data[0].content[0].text.value
-
-        return assistant_response
-    except Exception as e:
-        st.error(f"Failed to communicate with the assistant: {e}")
-        return "Sorry, there was an error processing your request."
+# OpenAI 클라이언트 설정
+openai.api_key = api_key
 
 # Streamlit 앱 구성
 st.title("AI Assistant Chat")
@@ -70,6 +26,20 @@ if "messages" not in st.session_state:
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
+
+def chat_with_assistant(user_input):
+    try:
+        # OpenAI API를 사용하여 응답 생성
+        response = openai.Completion.create(
+            model="text-davinci-003",
+            prompt=user_input,
+            max_tokens=150
+        )
+        assistant_response = response.choices[0].text.strip()
+        return assistant_response
+    except Exception as e:
+        st.error(f"Failed to communicate with the assistant: {e}")
+        return "Sorry, there was an error processing your request."
 
 # 사용자 입력 처리
 if prompt := st.chat_input("What is your question?"):
