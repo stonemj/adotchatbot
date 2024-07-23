@@ -24,8 +24,10 @@ if "messages" not in st.session_state:
 
 # 채팅 기록 표시
 for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+    if message["role"] == "user":
+        st.markdown(f"**User:** {message['content']}")
+    elif message["role"] == "assistant":
+        st.markdown(f"**Assistant:** {message['content']}")
 
 def chat_with_assistant(user_input):
     try:
@@ -46,11 +48,9 @@ prompt = st.text_input("What is your question?")
 
 if prompt:
     st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
+    st.markdown(f"**User:** {prompt}")
 
     # 어시스턴트 응답
-    with st.chat_message("assistant"):
-        response = chat_with_assistant(prompt)
-        st.markdown(response)
+    response = chat_with_assistant(prompt)
+    st.markdown(f"**Assistant:** {response}")
     st.session_state.messages.append({"role": "assistant", "content": response})
