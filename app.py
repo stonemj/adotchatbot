@@ -1,7 +1,8 @@
 import streamlit as st
-from openai import OpenAI
+import openai
 import time
 import os
+
 
 # GitHub Secrets에서 API 키 가져오기
 api_key = os.environ.get("OPENAI_API_KEY")
@@ -10,7 +11,8 @@ if not api_key:
     st.stop()
 
 # OpenAI 클라이언트 설정
-client = OpenAI(api_key=api_key)
+client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
 
 # 어시스턴트 ID
 assistant_id = "asst_kSpI6lSV52HpMJczFXXPuGyT"
