@@ -42,7 +42,9 @@ def chat_with_assistant(user_input):
         return "Sorry, there was an error processing your request."
 
 # 사용자 입력 처리
-if prompt := st.chat_input("What is your question?"):
+prompt = st.text_input("What is your question?")
+
+if prompt:
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
