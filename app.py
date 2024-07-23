@@ -1,5 +1,5 @@
 import streamlit as st
-from openai import OpenAI
+import openai
 import time
 
 # Streamlit 비밀 정보에서 API 키 가져오기
@@ -9,18 +9,17 @@ if not api_key:
     st.stop()
 
 # OpenAI 클라이언트 설정
-client = OpenAI(api_key=api_key)
+openai.api_key = api_key
 
 # 어시스턴트 ID
-assistant_id = "asst_kSpI6lSV52HpMJczFXXPuGyT"
+assistant_id = "gpt-3.5-turbo"
 
 # Streamlit 앱 구성
 st.title("AI Assistant Chat")
 
 # 세션 상태에 스레드 ID 저장
 if "thread_id" not in st.session_state:
-    thread = client.beta.threads.create()
-    st.session_state.thread_id = thread.id
+    st.session_state.thread_id = None
 
 # 채팅 기록을 저장할 리스트
 if "messages" not in st.session_state:
@@ -34,26 +33,21 @@ for message in st.session_state.messages:
 def chat_with_assistant(user_input):
     try:
         # 사용자 메시지를 스레드에 추가
-        client.beta.threads.messages.create(
-            thread_id=st.session_state.thread_id,
-            role="user",
-            content=user_input
+        st.session_state.messages.append({"role": "user", "content": user_input})
+
+        # 어시스턴트의 응답 생성
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                *st.session_state.messages
+            ]
         )
 
-        # 어시스턴트에게 실행 요청
-        run = client.beta.threads.runs.create(
-            thread_id=st.session_state.thread_id,
-            assistant_id=assistant_id
-        )
+        assistant_response = response.choices[0].message["content"].strip()
 
-        # 실행 완료 대기
-        while run.status != "completed":
-            time.sleep(1)
-            run = client.beta.threads.runs.retrieve(thread_id=st.session_state.thread_id, run_id=run.id)
-
-        # 어시스턴트의 응답 가져오기
-        messages = client.beta.threads.messages.list(thread_id=st.session_state.thread_id)
-        assistant_response = messages.data[0].content[0].text.value
+        # 어시스턴트의 응답을 세션 상태에 추가
+        st.session_state.messages.append({"role": "assistant", "content": assistant_response})
 
         return assistant_response
     except Exception as e:
@@ -68,6 +62,5 @@ if prompt := st.chat_input("What is your question?"):
 
     # 어시스턴트 응답
     response = chat_with_assistant(prompt)
-    st.session_state.messages.append({"role": "assistant", "content": response})
     with st.chat_message("assistant"):
         st.markdown(response)
