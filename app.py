@@ -1,5 +1,5 @@
 import streamlit as st
-import openai
+from openai import OpenAI
 import os
 from dotenv import load_dotenv
 
@@ -13,10 +13,10 @@ if not api_key:
     st.stop()
 
 # OpenAI 클라이언트 설정
-openai.api_key = api_key
+client = OpenAI(api_key=api_key)
 
 # Streamlit 앱 구성
-st.title("AI Assistant Chat")
+st.title("AI Assistant Chat (GPT-3.5 Turbo)")
 
 # 채팅 기록을 저장할 리스트
 if "messages" not in st.session_state:
@@ -24,33 +24,31 @@ if "messages" not in st.session_state:
 
 # 채팅 기록 표시
 for message in st.session_state.messages:
-    if message["role"] == "user":
-        st.markdown(f"**User:** {message['content']}")
-    elif message["role"] == "assistant":
-        st.markdown(f"**Assistant:** {message['content']}")
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
-def chat_with_assistant(user_input):
+def chat_with_assistant(messages):
     try:
-        # OpenAI API를 사용하여 응답 생성
-        response = openai.Completion.create(
-            model="text-davinci-003",
-            prompt=user_input,
+        # OpenAI API를 사용하여 응답 생성 (GPT-3.5 Turbo 사용)
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=messages,
             max_tokens=150
         )
-        assistant_response = response.choices[0].text.strip()
-        return assistant_response
+        return response.choices[0].message.content.strip()
     except Exception as e:
         st.error(f"Failed to communicate with the assistant: {e}")
         return "Sorry, there was an error processing your request."
 
 # 사용자 입력 처리
-prompt = st.text_input("What is your question?")
-
-if prompt:
+if prompt := st.chat_input("What is your question?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
-    st.markdown(f"**User:** {prompt}")
+    with st.chat_message("user"):
+        st.markdown(prompt)
 
     # 어시스턴트 응답
-    response = chat_with_assistant(prompt)
-    st.markdown(f"**Assistant:** {response}")
+    messages = [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
+    response = chat_with_assistant(messages)
     st.session_state.messages.append({"role": "assistant", "content": response})
+    with st.chat_message("assistant"):
+        st.markdown(response)
