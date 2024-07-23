@@ -4,7 +4,7 @@ from openai import OpenAI
 app = Flask(__name__)
 
 # OpenAI 클라이언트 생성
-client = OpenAI(api_key="sk-proj-ZfhEAvI5zLQpFjWSn6nST3BlbkFJNoP5l2Es4jNOuvrngnb1")
+client = OpenAI(api_key="sk-proj-STu20HgmHGaYZcJXFoo1T3BlbkFJgppxK4Gbk0pe4XlXWksj")
 
 # 어시스턴트 ID
 assistant_id = "asst_kSpI6lSV52HpMJczFXXPuGyT"
