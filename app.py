@@ -12,7 +12,7 @@ if not api_key:
 openai.api_key = api_key
 
 # 어시스턴트 ID
-assistant_id = "gpt-3.5-turbo"
+assistant_id = "gpt-4o-mini"
 
 # Streamlit 앱 구성
 st.title("AI Assistant Chat")
@@ -37,7 +37,7 @@ def chat_with_assistant(user_input):
 
         # 어시스턴트의 응답 생성
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
                 *st.session_state.messages
